@@ -1,0 +1,32 @@
+---
+- name: Install the required packages
+  ansible.builtin.apt:
+    pkg:
+    - ca-certificates
+    - curl
+    - gnupg
+    - lsb-release
+    update_cache: yes
+
+- name: Add a gpg key for Docker repo
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Get the Ubuntu codename version
+  shell: $(. /etc/os-release && echo "$VERSION_CODENAME")
+  register: ubuntu_codename
+
+- name: Add Google Cloud Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/ubuntu "{ubuntu_codename}" stable
+    state: present
+
+- name: Install the Docker components
+  ansible.builtin.apt:
+    pkg:
+    - docker-ce 
+    - docker-ce-cli 
+    - containerd.io 
+    - docker-buildx-plugin 
+    - docker-compose-plugin
