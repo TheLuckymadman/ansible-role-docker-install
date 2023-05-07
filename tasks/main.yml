@@ -11,15 +11,22 @@
 - name: Add a gpg key for Docker repo
   ansible.builtin.apt_key:
     url: https://download.docker.com/linux/ubuntu/gpg
+    keyring: /etc/apt/keyrings/docker.gpg
     state: present
 
 - name: Get the Ubuntu codename version
-  shell: $(. /etc/os-release && echo "$VERSION_CODENAME")
+  shell: 'echo \
+  deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable'
   register: ubuntu_codename
+
+- name: Output of ubuntu_codename
+  debug:
+    msg: "{{ ubuntu_codename.stdout_lines }}" 
 
 - name: Add Google Cloud Repository
   apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu "{ubuntu_codename}" stable
+    repo: "{{ ubuntu_codename.stdout_lines[0] }}"
     state: present
 
 - name: Install the Docker components
